@@ -1,0 +1,72 @@
+---
+title: "Spam Detection"
+author: "Helee Rana"
+date: "7/26/2020"
+output:
+  word_document: default
+  html_document: default
+---
+
+## Example 2: Spam Detection by Text mining
+```{r}
+require(tidyverse, quietly = TRUE)
+
+sms_data=read_csv("/Users/heleerana/Desktop/DATA MINING Prof. YEGIN/sms_data.csv")
+sms_data
+```
+
+```{r}
+##install.packages("quanteda")
+##install.packages("quanteda.textmodels")
+```
+```{r}
+require(quanteda)
+require(quanteda.textmodels)
+```
+
+```{r}
+
+my_corpus=corpus(sms_data$text)
+summary(my_corpus)
+head(my_corpus)
+```
+
+
+```{r}
+ my_dfm=dfm(my_corpus)
+my_dfm
+```
+
+
+```{r}
+my_dfm = dfm_weight(my_dfm,scheme = "boolean")
+docvars(my_dfm,field = "type")=sms_data$type
+```
+
+```{r}
+my_dfm$type
+```
+
+
+```{r}
+docvars(my_dfm,field = "training")=runif(nrow(sms_data))>.3
+```
+
+```{r}
+training_dfm = dfm_subset(my_dfm,training == TRUE)
+testing_dfm = dfm_subset(my_dfm,training == FALSE)
+```
+
+```{r}
+my_model = textmodel_nb(training_dfm,training_dfm$type,smooth = 1)
+```
+
+```{r}
+require(caret)
+```
+
+
+```{r}
+predictions = predict(my_model,testing_dfm)
+confusionMatrix(predictions , as.factor(testing_dfm$type))
+```
